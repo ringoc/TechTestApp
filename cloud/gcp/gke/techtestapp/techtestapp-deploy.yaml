@@ -1,0 +1,39 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+#  Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: techtestapp
+  labels:
+    app: techtestapp
+    tier: frontend
+spec:
+  selector:
+    matchLabels:
+      app: techtestapp
+      tier: frontend
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: techtestapp
+        tier: frontend
+    spec:
+      containers:
+        - name: techtestapp
+          image: gcr.io/ringo-264812/techtestapp:latest
+          imagePullPolicy: Always
+          ports:
+            - name: 3000tcp
+              containerPort: 3000
+              protocol: TCP
+          args: ["serve"]
+
+
+
+

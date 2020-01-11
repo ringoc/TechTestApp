@@ -51,9 +51,21 @@ has much better performance with EKS.
 
 ### Deploy to GKE
 
+#### Assumption
+1. project ringo-264812 existed
+2. Cloud SDK is installed
+
 gcloud auth login
 gcloud auth configure-docker
 docker tag techtestapp:latest gcr.io/ringo-264812/techtestapp:latest
+docker push gcr.io/ringo-264812/techtestappgcr.io/ringo-264812/techtestapp
+gcloud config set project ringo-264812
+gcloud container clusters create ringo-cluster
+gcloud container clusters get-credentials ringo-cluster
+
+#### Write up kubernetes manifest for deploy the SPA frontend
+
+
 
 
 
