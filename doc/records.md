@@ -9,12 +9,11 @@
 3. Docker installed
 3. forked from `https://github.com/servian/TechTestApp` to `https://github.com/ringoc/TechTestApp`
 
-### Steps
+### Test in localhost
 1. check `/readme.md`
 2. check `/doc/readme.md`
-3. try start the SPA in local
 
-#### Build
+#### Build in local
 1. build from source
 2. install `dep`
 3. compile locally `go get -d github.com/ringoc/TechTestApp` 
@@ -26,7 +25,7 @@
 4. Oops, To Do list can't be saved ![alt text][spa-localhost]
 5. check `ERROR: pq: password authentication failed for user "postgres"`, of course ! no persistance storage.
  
-### Setup up PostgreSQL
+#### Setup up PostgreSQL in local with docker
  
 1. Fire up a PostgreSQL at localhost `docker run --name postgres -e POSTGRES_PASSWORD=changeme -p 5432:5432 -d postgres`
 2. Test psql connection `telnet localhost 5432`
@@ -36,4 +35,26 @@
 
 [spa-localhost]: images/spa-localhost.png "SPA localhost"
 [spa-localhost-1]: images/spa-localhost-1.png "SPA localhost 1"
+
+### Architecture decision
+For personal preference, I would go for containers with Kubernetes. With Kubernetes, based on personal experience, GKE
+has much better performance with EKS. 
+
+### Build container image for SPA
+1. Run `docker build . -t techtestapp:latest` failed
+2. Error log suggest dependency not resolved. 
+3. Add additional `go get xxx` in Dockerfile
+4. Docker image build successful but fail to retrieve a page `ERROR: EMPTYRESPONSE`
+5. Usually this indicate application bind address 
+6. Ahhh .... of course ... conf.toml `ListenHost="localhost"` , change to  `ListenHost="0.0.0.0"` and try again 
+7. Bingo ! All good
+
+### Deploy to GKE
+
+gcloud auth login
+gcloud auth configure-docker
+docker tag techtestapp:latest gcr.io/ringo-264812/techtestapp:latest
+
+
+
 
