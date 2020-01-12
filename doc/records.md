@@ -2,6 +2,9 @@
 
 ## Deployment records
 
+## Test result 
+The SPA is under http://34.87.204.59:3000/
+
 ### Pre-requisites
 
 1. golang installed
