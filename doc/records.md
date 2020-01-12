@@ -16,6 +16,12 @@ The SPA is under http://34.87.204.59:3000/
 └── secrets         # .gitigore , includes GCP service account JSON
 ```
 
+### Future improvement
+If more time allowed, would consider the following items:
+1. provision Postgres HA setup within Kubernetes cluster with replicated storage
+2. improve the `updatedb` handling so that it don't refresh the db when deployment updated
+3. better performance testing
+
 ### Pre-requisites
 
 1. golang installed
