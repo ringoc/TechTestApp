@@ -23,12 +23,12 @@
 2. `dist` created, run `./dist/TechTestApp serve`
 3. Dada ! Server started at localhost:3000 , Cool at least we got something
 4. Oops, To Do list can't be saved ![alt text][spa-localhost]
-5. check `ERROR: pq: password authentication failed for user "postgres"`, of course ! no persistance storage.
+5. check `ERROR: pq: password authentication failed for user "postgres"`, of course ! no DB setup.
  
 #### Setup up PostgreSQL in local with docker
  
 1. Fire up a PostgreSQL at localhost `docker run --name postgres -e POSTGRES_PASSWORD=changeme -p 5432:5432 -d postgres`
-2. Test psql connection `telnet localhost 5432`
+2. Test connection 
 3. kill the SPA and create db with `./dist/TechTestApp updatedb`, database seems created
 4. try start the SPA again ![alt text][spa-localhost-1]
 5. All good, looks like it is working fine in local, start prepare to deploy to cloud. 
@@ -37,8 +37,9 @@
 [spa-localhost-1]: images/spa-localhost-1.png "SPA localhost 1"
 
 ### Architecture decision
-For personal preference, I would go for containers with Kubernetes. With Kubernetes, based on personal experience, GKE
-has much better performance with EKS. 
+For personal preference, I would build an image for the SPA and put them on Kubernetes. Choosing GKE since I got free credits. 
+- SPA frontend autoscaling and HA with K8s deployment
+- DB PostgreSQL HA with Cloud SQL
 
 ### Build container image for SPA
 1. Run `docker build . -t techtestapp:latest` failed
@@ -52,8 +53,11 @@ has much better performance with EKS.
 ### Deploy to GKE
 
 #### Assumption
-1. project ringo-264812 existed
-2. Cloud SDK is installed
+1. GCP roject `ringo-264812` already existed
+2. Cloud SDK is installed, GCR API enabled, GKE API enabled
+3. Setup GKE cluster `ringo-cluster`
+
+#### Setting up GKE cluster
 ```
 gcloud auth login
 gcloud auth configure-docker
@@ -63,26 +67,57 @@ gcloud config set project ringo-264812
 gcloud container clusters create ringo-cluster
 gcloud container clusters get-credentials ringo-cluster
 ```
+#### 
 
-#### Write up kubernetes manifest for deploy the SPA frontend
+#### Define manifest for deploy the SPA frontend
+Manifest files located under folder `/cloud/gcp/gke/techtestapp/`
 
-
-Under folder `/cloud/gcp/gke/techtestapp/*`
-PVC - `techtestapp-pvc.yaml`
-SVC - `techtestapp-svc.yaml`
-Deploy - `techtestapp-deploy.yaml`
-HorizontalAutoScaler - `techtestapp-autoscale.yaml`
+1. `techtestapp-pvc.yaml` - PersistenceVolumeClaim
+2. `techtestapp-svc.yaml` - Service
+3. `techtestapp-deploy.yaml` - Deployment
+4. `techtestapp-autoscale.yaml` - HorizontalAutoScaler 
 
 Load testing by firing up a busybox 
 
-```
-> kubectl run --generator=run-pod/v1 -it --rm load-generator --image=busybox /bin/sh
-> while true; do wget -q -O- http://34.87.204.59:3000/; done
-```
+`kubectl run --generator=run-pod/v1 -it --rm load-generator --image=busybox /bin/sh`
 
-#### Write up Kubernetes manifests for deploy the PostgreSQL db
+`while true; do wget -q -O- http://34.87.204.59:3000/; done`
 
-https://portworx.com/postgres-kubernetes/
+Watch the AutoScaler up scale the replicas as the CPU load go up
+
+#### Define manifests for deploy the PostgreSQL (Current)
+
+1. `postgres-db-pvc.yaml` - PersistenceVolumeClaim
+2. `postgres-db-svc.yaml` - Service
+3. `postgres-db-deploy.yaml` - Deployment
+4. `postgres-db-secret.yaml` - Secret
+
+
+#### Setup  PostgreSQL Cloud SQL instance HA (Ideal)
+1. Create PostgreSQL Cloud SQL instance
+```
+gcloud sql instances create postgresdb \ 
+    --availability-type=REGIONAL \
+    --database-version=POSTGRES_11 \
+    --cpu=2 --memory=4 \
+    --region=australia-southeast1
+```        
+2. Configure root user
+```
+gcloud sql users set-password postgres \
+    --instance=postgresdb \
+    --prompt-for-password
+```
+3. Enable Cloud SQL Admin API 
+`https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com`
+4. Create Service Account 
+`https://cloud.google.com/sql/docs/postgres/sql-proxy#create-service-account`
+5. Create Secret for 
+`kubectl create secret generic cloudsql-instance-credentials \
+--from-file=credentials.json=secrets/ringo-264812-fe358db03343.json`
+6. Define manifest with cloud proxy 
+7. `./TechTestApp updatedb` can drop DB but failed to create DB 
+`ERROR : pq: permission denied for tablespace pg_default`
 
 
 
