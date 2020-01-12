@@ -2,8 +2,19 @@
 
 ## Deployment records
 
-## Test result 
+## Summary
 The SPA is under http://34.87.204.59:3000/
+
+``` sh
+.
+├── ansible         # ansible playbook for provision
+├── kubernetes      # kubernetes manifest files
+├── doc
+│   └── record.md   # Deployment record
+├── config.toml     # Updated PostgreSQL connection info
+├── Dockerfile      # Updated Dockerfile
+└── secrets         # .gitigore , includes GCP service account JSON
+```
 
 ### Pre-requisites
 
@@ -56,6 +67,7 @@ For personal preference, I would build an image for the SPA and put them on Kube
 ### Deploy to GKE
 
 #### Assumption
+1. Assume 
 1. GCP roject `ringo-264812` already existed
 2. Cloud SDK is installed, GCR API enabled, GKE API enabled
 3. Setup GKE cluster `ringo-cluster`
@@ -89,7 +101,11 @@ Load testing by firing up a busybox
 Watch the AutoScaler up scale the replicas as the CPU load go up
 
 #### Setup  PostgreSQL Cloud SQL instance HA 
-1. Create PostgreSQL Cloud SQL instance
+
+Try Ansible/Terraform, either of them provide good support of Cloud SQL, use `gcloud` instead 
+
+- Create PostgreSQL Cloud SQL instance with HA 
+
 ```
 gcloud sql instances create postgresdb \ 
     --availability-type=REGIONAL \
@@ -97,22 +113,56 @@ gcloud sql instances create postgresdb \
     --cpu=2 --memory=4 \
     --region=australia-southeast1
 ```        
-2. Configure root user
+- Configure root user
 ```
 gcloud sql users set-password postgres \
     --instance=postgresdb \
     --prompt-for-password
 ```
-3. Enable Cloud SQL Admin API 
+- (Optional) Enable Cloud SQL Admin API 
 `https://console.cloud.google.com/flows/enableapi?apiid=sqladmin&redirect=https://console.cloud.google.com`
-4. Create Service Account 
-`https://cloud.google.com/sql/docs/postgres/sql-proxy#create-service-account`
-5. Create Secret for 
-`kubectl create secret generic cloudsql-instance-credentials \
---from-file=credentials.json=secrets/ringo-264812-fe358db03343.json`
-6. Define manifest with cloud proxy 
-7. `./TechTestApp updatedb` can drop DB but failed to create DB 
-`ERROR : pq: permission denied for tablespace pg_default`
+
+- Create Service Account 
+
+```
+gcloud iam service-accounts create postgres --display-name "postgres"
+gcloud projects add-iam-policy-binding ringo-264812 --member \
+    serviceAccount:postgres@ringo-264812.iam.gserviceaccount.com --role roles/cloudsql.admin
+gcloud iam service-accounts keys create key.json --iam-account postgres@ringo-264812.iam.gserviceaccount.com
+```
+
+
+- Create Secret for `cloudsql-instance-credentials`
+```
+kubectl create secret generic cloudsql-instance-credentials \
+    --from-file=credentials.json=secrets/ringo-264812-fe358db03343.json
+```
+- Define manifest with cloud proxy see 
+`kubernetes/gcp/gke/techtestapp/techtestapp-deploy.yaml`
+
+```
+ - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.14
+          command: ["/cloud_sql_proxy",
+                    "-instances=ringo-264812:australia-southeast1:postgresdb=tcp:5432",
+            # If running on a VPC, the Cloud SQL proxy can connect via Private IP. See:
+            # https://cloud.google.com/sql/docs/mysql/private-ip for more info.
+            # "-ip_address_types=PRIVATE",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+          securityContext:
+            runAsUser: 2  # non-root user
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: my-secrets-volume
+              mountPath: /secrets/cloudsql
+              readOnly: true
+      volumes:
+        - name: my-secrets-volume
+          secret:
+            secretName: cloudsql-instance-credentials
+```
+
+
 
 
 
