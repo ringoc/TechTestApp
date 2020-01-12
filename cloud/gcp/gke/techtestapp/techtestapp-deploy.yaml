@@ -15,7 +15,7 @@ spec:
     matchLabels:
       app: techtestapp
       tier: frontend
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
   template:
@@ -33,6 +33,13 @@ spec:
               containerPort: 3000
               protocol: TCP
           args: ["serve"]
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "200m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
 
 
 

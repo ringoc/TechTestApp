@@ -65,13 +65,24 @@ gcloud container clusters get-credentials ringo-cluster
 ```
 
 #### Write up kubernetes manifest for deploy the SPA frontend
+
+
 Under folder `/cloud/gcp/gke/techtestapp/*`
 PVC - `techtestapp-pvc.yaml`
 SVC - `techtestapp-svc.yaml`
 Deploy - `techtestapp-deploy.yaml`
+HorizontalAutoScaler - `techtestapp-autoscale.yaml`
 
-Endpoint
-http://34.87.204.59:3000/
+Load testing by firing up a busybox 
+
+```
+> kubectl run --generator=run-pod/v1 -it --rm load-generator --image=busybox /bin/sh
+> while true; do wget -q -O- http://34.87.204.59:3000/; done
+```
+
+#### Write up Kubernetes manifests for deploy the PostgreSQL db
+
+https://portworx.com/postgres-kubernetes/
 
 
 
