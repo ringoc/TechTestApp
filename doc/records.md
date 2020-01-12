@@ -88,15 +88,7 @@ Load testing by firing up a busybox
 
 Watch the AutoScaler up scale the replicas as the CPU load go up
 
-#### Define manifests for deploy the PostgreSQL (Current)
-
-1. `postgres-db-pvc.yaml` - PersistenceVolumeClaim
-2. `postgres-db-svc.yaml` - Service
-3. `postgres-db-deploy.yaml` - Deployment
-4. `postgres-db-secret.yaml` - Secret
-
-
-#### Setup  PostgreSQL Cloud SQL instance HA (Ideal)
+#### Setup  PostgreSQL Cloud SQL instance HA 
 1. Create PostgreSQL Cloud SQL instance
 ```
 gcloud sql instances create postgresdb \ 
