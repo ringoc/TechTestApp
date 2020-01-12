@@ -1,0 +1,22 @@
+- name: Create IP address
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    service_account_file: ../../secrets/ringo-admin-264812-f0f059d28b3d.json
+    project: ringo-264812
+    auth_kind: serviceaccount
+    scopes:
+      - https://www.googleapis.com/auth/compute
+
+  tasks:
+    -
+    - name: Allocate an IP Address
+      gcp_compute_address:
+        state: present
+        name: 'test-address1'
+        region: 'australia-southeast1'
+        project: "{{ project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_file: "{{ service_account_file }}"
+        scopes: "{{ scopes }}"

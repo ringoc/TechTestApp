@@ -1,0 +1,39 @@
+- name: Create Container Cluster
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    service_account_file: ../../secrets/ringo-admin-264812-f0f059d28b3d.json
+    project: ringo-264812
+    auth_kind: serviceaccount
+    scopes:
+      - https://www.googleapis.com/auth/compute
+
+  tasks:
+    - name: create a cluster
+      gcp_container_cluster:
+        name: ringo-cluster
+        initial_node_count: 3
+        master_auth:
+          username: cluster_admin
+          password: my-secret-password
+        node_config:
+          machine_type: n1-standard-1
+          disk_size_gb: 50
+        location: australia-southeast1-b
+        project: "{{ project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      register: cluster
+
+    - name: create a node pool
+      gcp_container_node_pool:
+        name: default-pool
+        initial_node_count: 3
+        cluster: "{{ cluster }}"
+        location: australia-southeast1-b
+        project: "{{ project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_file: "{{ service_account_file }}"
+        state: present

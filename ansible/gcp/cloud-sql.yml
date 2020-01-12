@@ -1,0 +1,47 @@
+- name: Create Cloud SQL
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    service_account_file: ../../secrets/ringo-admin-264812-f0f059d28b3d.json
+    project: ringo-264812
+    auth_kind: serviceaccount
+    scopes:
+      - https://www.googleapis.com/auth/compute
+
+  tasks:
+    - name: create a instance
+      gcp_sql_instance:
+        name: "postgresdb-1"
+        backend_type: "SECOND_GEN"
+        database_version: "POSTGRES_11"
+        settings:
+          ip_configuration:
+            authorized_networks:
+              - name: google dns server
+                value: 8.8.8.8/32
+          tier: db-custom-2-4096
+          availability_type: "REGIONAL"
+        region: australia-southeast1
+        project: "{{ project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      register: instance
+
+#    - name: create a user
+#      gcp_sql_user:
+#        name: postgres
+#        host: 10.1.2.3
+#        password: changeme
+#        instance: "{{ instance }}"
+#        project: "{{ project }}"
+#        auth_kind: "{{ auth_kind }}"
+#        service_account_file: "{{ service_account_file }}"
+#        state: present
+#    - name: get info on a user
+#      gcp_sql_user_info:
+#        instance: "{{ instance }}"
+#        project: "{{ project }}"
+#        auth_kind: "{{ auth_kind }}"
+#        service_account_file: "{{ service_account_file }}"
