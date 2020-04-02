@@ -1,0 +1,18 @@
+
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: techtestapp
+  labels:
+    app: techtestapp
+    tier: frontend
+spec:
+  ports:
+    - name: 3000tcp
+      port: 80
+      targetPort: 3000
+  selector:
+    app: techtestapp
+    tier: frontend
+  type: LoadBalancer

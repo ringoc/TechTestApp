@@ -1,0 +1,76 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+#  Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: techtestapp
+  labels:
+    app: techtestapp
+    tier: frontend
+spec:
+  selector:
+    matchLabels:
+      app: techtestapp
+      tier: frontend
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: techtestapp
+        tier: frontend
+    spec:
+      initContainers:
+        - name: init-techtestapp
+          image: ringoc/techtestapp
+          imagePullPolicy: Always
+          args: ["updatedb","-s"]
+      containers:
+        - name: techtestapp
+          image: ringoc/techtestapp
+          imagePullPolicy: Always
+          ports:
+            - name: 3000tcp
+              containerPort: 3000
+              protocol: TCP
+          args: ["serve"]
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "200m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /healthcheck/
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 3
+#        - name: cloudsql-proxy
+#          image: gcr.io/cloudsql-docker/gce-proxy:1.14
+#          command: ["/cloud_sql_proxy",
+#                    "-instances=ringo-264812:australia-southeast1:postgresdb=tcp:5432",
+#            # If running on a VPC, the Cloud SQL proxy can connect via Private IP. See:
+#            # https://cloud.google.com/sql/docs/mysql/private-ip for more info.
+#            # "-ip_address_types=PRIVATE",
+#                    "-credential_file=/secrets/cloudsql/credentials.json"]
+#          securityContext:
+#            runAsUser: 2  # non-root user
+#            allowPrivilegeEscalation: false
+#          volumeMounts:
+#            - name: my-secrets-volume
+#              mountPath: /secrets/cloudsql
+#              readOnly: true
+#      volumes:
+#        - name: my-secrets-volume
+#          secret:
+#            secretName: cloudsql-instance-credentials
+
+
+
+
