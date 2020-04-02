@@ -10,9 +10,9 @@ resources:
 
 variables:
   # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: 'e76a73cd-9c48-4a0c-b774-8fd48c7e1958'
+  dockerRegistryServiceConnection: 'cecdeabf-e6a7-4e34-b94e-aec5c493b4ec'
   imageRepository: 'ringoctechtestapp'
-  containerRegistry: 'ringoc.azurecr.io'
+  containerRegistry: 'ringochan.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
   
