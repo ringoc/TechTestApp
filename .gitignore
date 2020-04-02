@@ -23,3 +23,5 @@ dist/
 # Output Binary
 TechTestApp
 /secrets/
+/terraform-aks-k8s/terraform.tfstate
+/terraform-aks-k8s/out.plan
